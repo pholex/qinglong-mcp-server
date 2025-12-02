@@ -17,6 +17,17 @@ env_paths = [
     Path(__file__).parent / ".env",  # 脚本所在目录
 ]
 
+# 如果配置文件不存在，自动创建
+config_dir = Path.home() / ".qinglong-mcp"
+config_file = config_dir / ".env"
+if not config_file.exists():
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config_file.write_text(
+        "QINGLONG_URL=https://your-qinglong-url.com\n"
+        "CLIENT_ID=your_client_id\n"
+        "CLIENT_SECRET=your_client_secret\n"
+    )
+
 for env_path in env_paths:
     if env_path.exists():
         load_dotenv(env_path)

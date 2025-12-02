@@ -4,6 +4,8 @@
 
 这是一个 Model Context Protocol (MCP) server，用于查询和执行青龙面板中的定时任务。
 
+> **说明**：本仓库包含源代码，供开发者参考。普通用户请直接通过 pip 或 uvx 安装使用。
+
 ## 功能
 
 - `list_qinglong_tasks`: 查询青龙面板中的所有定时任务列表
@@ -28,21 +30,21 @@ uvx qinglong-mcp-server
 
 ## 配置
 
-创建配置文件 `~/.qinglong-mcp/.env`：
+首次运行时会自动创建配置文件模板。
+
+编辑配置文件：
 
 **macOS/Linux:**
 ```bash
-mkdir -p ~/.qinglong-mcp
 nano ~/.qinglong-mcp/.env
 ```
 
 **Windows:**
 ```cmd
-mkdir %USERPROFILE%\.qinglong-mcp
 notepad %USERPROFILE%\.qinglong-mcp\.env
 ```
 
-填入以下内容：
+填入你的青龙面板信息：
 
 ```
 QINGLONG_URL=https://your-qinglong-url.com
@@ -52,28 +54,9 @@ CLIENT_SECRET=your_client_secret
 
 ## 使用
 
-### 在 Kiro CLI 中使用
+### 在 MCP 客户端中使用
 
-编辑 Kiro CLI 的 MCP 配置文件（`~/.kiro/settings/mcp.json`）：
-
-```json
-{
-  "mcpServers": {
-    "qinglong": {
-      "command": "uvx",
-      "args": ["qinglong-mcp-server"]
-    }
-  }
-}
-```
-
-### 在 Claude Desktop 中使用
-
-编辑配置文件：
-
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+编辑 MCP 配置文件，添加以下内容：
 
 ```json
 {
@@ -85,40 +68,17 @@ CLIENT_SECRET=your_client_secret
   }
 }
 ```
+
+配置文件位置（以 Kiro CLI 为例）：
+- `~/.kiro/settings/mcp.json`
 
 ### 开发测试
 
 运行测试脚本：
 
 ```bash
-./test_run_task.py <任务ID>
+./test_query_tasks.py
 ```
-
-## 工具说明
-
-### list_qinglong_tasks
-
-查询所有任务，无需参数。
-
-### run_task
-
-执行任务并等待完成，自动返回执行日志（最多等待30秒），需要提供：
-- `task_id`: 任务 ID（整数）
-
-### run_task_async
-
-异步启动任务，不等待执行完成，需要提供：
-- `task_id`: 任务 ID（整数）
-
-### get_task_logs
-
-获取任务执行日志，需要提供：
-- `task_id`: 任务 ID（整数）
-
-### get_task_status
-
-获取任务执行状态，需要提供：
-- `task_id`: 任务 ID（整数）
 
 ## 升级
 
@@ -133,4 +93,4 @@ pip install -U qinglong-mcp-server
 
 ## 联系方式
 
-- Email: pholex@gmail.com
+Email: pholex@gmail.com

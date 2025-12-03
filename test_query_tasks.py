@@ -41,15 +41,21 @@ if token:
     if result:
         crons = result.get("data", [])
         crons.sort(key=lambda x: x.get('id', 0))
-        print(f"青龙面板: {QINGLONG_URL}")
-        print(f"共 {result.get('total', 0)} 个任务:\n")
+        total = result.get("total", 0)
+        
+        output = f"青龙面板: {QINGLONG_URL}\n共 {total} 个任务:\n\n"
         for cron in crons:
-            print(f"ID: {cron.get('id')}")
-            print(f"名称: {cron.get('name')}")
-            print(f"命令: {cron.get('command')}")
-            print(f"定时: {cron.get('schedule')}")
-            print(f"状态: {'启用' if cron.get('isDisabled') == 0 else '禁用'}")
-            print("-" * 50)
+            output += f"ID: {cron.get('id')}\n"
+            output += f"名称: {cron.get('name')}\n"
+            output += f"命令: {cron.get('command')}\n"
+            output += f"定时: {cron.get('schedule')}\n"
+            output += f"状态: {'启用' if cron.get('isDisabled') == 0 else '禁用'}\n"
+            last_running = cron.get('last_running_time')
+            if last_running:
+                output += f"上次运行时长: {last_running}秒\n"
+            output += "-" * 50 + "\n"
+        
+        print(output)
     else:
         print("获取任务列表失败")
         sys.exit(1)

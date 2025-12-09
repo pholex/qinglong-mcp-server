@@ -72,7 +72,7 @@ def main():
                 }
                 print(json.dumps(response), flush=True)
             elif method == "notifications/initialized":
-                continue
+                pass  # Notifications don't require response
             elif method == "tools/list":
                 response = {
                     "jsonrpc": "2.0",
@@ -130,6 +130,25 @@ def main():
                                     },
                                     "required": ["task_id"]
                                 }
+                            },
+                            {
+                                "name": "list_subscriptions",
+                                "description": "查询青龙面板中的所有订阅列表",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            },
+                            {
+                                "name": "run_subscription",
+                                "description": "运行指定的订阅",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "subscription_id": {"type": "integer", "description": "订阅 ID"}
+                                    },
+                                    "required": ["subscription_id"]
+                                }
                             }
                         ]
                     }
@@ -144,7 +163,7 @@ def main():
                     response = {
                         "jsonrpc": "2.0",
                         "id": request["id"],
-                        "result": {"content": [{"type": "text", "text": "获取 token 失败"}], "isError": True}
+                        "error": {"code": -32603, "message": "获取 token 失败，请检查凭证是否正确"}
                     }
                     print(json.dumps(response), flush=True)
                     continue
@@ -159,7 +178,7 @@ def main():
                         response = {
                             "jsonrpc": "2.0",
                             "id": request["id"],
-                            "result": {"content": [{"type": "text", "text": f"请求失败: {str(e)}"}], "isError": True}
+                            "error": {"code": -32603, "message": f"请求失败: {str(e)}"}
                         }
                         print(json.dumps(response), flush=True)
                         continue
@@ -191,7 +210,7 @@ def main():
                         response = {
                             "jsonrpc": "2.0",
                             "id": request["id"],
-                            "result": {"content": [{"type": "text", "text": f"获取任务列表失败: {result}"}], "isError": True}
+                            "error": {"code": -32603, "message": f"获取任务列表失败: {result}"}
                         }
                 
                 elif tool_name == "run_task_async":
@@ -207,7 +226,7 @@ def main():
                         response = {
                             "jsonrpc": "2.0",
                             "id": request["id"],
-                            "result": {"content": [{"type": "text", "text": f"请求失败: {str(e)}"}], "isError": True}
+                            "error": {"code": -32603, "message": f"请求失败: {str(e)}"}
                         }
                         print(json.dumps(response), flush=True)
                         continue
@@ -222,7 +241,7 @@ def main():
                         response = {
                             "jsonrpc": "2.0",
                             "id": request["id"],
-                            "result": {"content": [{"type": "text", "text": f"运行任务失败: {result}"}], "isError": True}
+                            "error": {"code": -32603, "message": f"运行任务失败: {result}"}
                         }
                 
                 elif tool_name == "get_task_logs":
@@ -236,7 +255,7 @@ def main():
                         response = {
                             "jsonrpc": "2.0",
                             "id": request["id"],
-                            "result": {"content": [{"type": "text", "text": f"请求失败: {str(e)}"}], "isError": True}
+                            "error": {"code": -32603, "message": f"请求失败: {str(e)}"}
                         }
                         print(json.dumps(response), flush=True)
                         continue
@@ -270,7 +289,7 @@ def main():
                         response = {
                             "jsonrpc": "2.0",
                             "id": request["id"],
-                            "result": {"content": [{"type": "text", "text": f"获取任务信息失败: {result}"}], "isError": True}
+                            "error": {"code": -32603, "message": f"获取任务信息失败: {result}"}
                         }
                 
                 elif tool_name == "get_task_status":
@@ -284,7 +303,7 @@ def main():
                         response = {
                             "jsonrpc": "2.0",
                             "id": request["id"],
-                            "result": {"content": [{"type": "text", "text": f"请求失败: {str(e)}"}], "isError": True}
+                            "error": {"code": -32603, "message": f"请求失败: {str(e)}"}
                         }
                         print(json.dumps(response), flush=True)
                         continue
@@ -312,7 +331,7 @@ def main():
                         response = {
                             "jsonrpc": "2.0",
                             "id": request["id"],
-                            "result": {"content": [{"type": "text", "text": f"获取任务状态失败: {result}"}], "isError": True}
+                            "error": {"code": -32603, "message": f"获取任务状态失败: {result}"}
                         }
                 
                 elif tool_name == "run_task":
@@ -327,7 +346,7 @@ def main():
                             response = {
                                 "jsonrpc": "2.0",
                                 "id": request["id"],
-                                "result": {"content": [{"type": "text", "text": f"启动任务失败: {result}"}], "isError": True}
+                                "error": {"code": -32603, "message": f"启动任务失败: {result}"}
                             }
                             print(json.dumps(response), flush=True)
                             continue
@@ -335,34 +354,52 @@ def main():
                         response = {
                             "jsonrpc": "2.0",
                             "id": request["id"],
-                            "result": {"content": [{"type": "text", "text": f"启动任务失败: {str(e)}"}], "isError": True}
+                            "error": {"code": -32603, "message": f"启动任务失败: {str(e)}"}
                         }
                         print(json.dumps(response), flush=True)
                         continue
                     
                     time.sleep(2)
                     response = None
+                    task_started = False
+                    
                     for _ in range(6):
                         time.sleep(5)
                         try:
-                            log_url = f"{QINGLONG_URL}/open/crons/{task_id}/log"
-                            log_resp = requests.get(log_url, headers=headers, timeout=10)
-                            log_result = log_resp.json()
+                            status_url = f"{QINGLONG_URL}/open/crons/{task_id}"
+                            status_resp = requests.get(status_url, headers=headers, timeout=10)
+                            status_result = status_resp.json()
                             
-                            if log_result.get("code") == 200:
-                                log_content = log_result["data"]
-                                if "执行结束" in log_content:
-                                    response = {
-                                        "jsonrpc": "2.0",
-                                        "id": request["id"],
-                                        "result": {"content": [{"type": "text", "text": log_content}]}
-                                    }
+                            if status_result.get("code") == 200:
+                                cron = status_result["data"]
+                                task_status = cron.get("status")
+                                
+                                # status: 0=运行中, 1=空闲
+                                if task_status == 0:
+                                    task_started = True
+                                elif task_status == 1 and task_started:
+                                    log_url = f"{QINGLONG_URL}/open/crons/{task_id}/log"
+                                    log_resp = requests.get(log_url, headers=headers, timeout=10)
+                                    log_result = log_resp.json()
+                                    
+                                    if log_result.get("code") == 200:
+                                        response = {
+                                            "jsonrpc": "2.0",
+                                            "id": request["id"],
+                                            "result": {"content": [{"type": "text", "text": log_result["data"]}]}
+                                        }
+                                    else:
+                                        response = {
+                                            "jsonrpc": "2.0",
+                                            "id": request["id"],
+                                            "error": {"code": -32603, "message": f"获取日志失败: {log_result}"}
+                                        }
                                     break
                         except Exception as e:
                             response = {
                                 "jsonrpc": "2.0",
                                 "id": request["id"],
-                                "result": {"content": [{"type": "text", "text": f"检查任务失败: {str(e)}"}], "isError": True}
+                                "error": {"code": -32603, "message": f"检查任务失败: {str(e)}"}
                             }
                             break
                     
@@ -372,6 +409,80 @@ def main():
                             "id": request["id"],
                             "result": {"content": [{"type": "text", "text": f"任务 {task_id} 超时（30秒），请使用 get_task_logs 查看日志"}]}
                         }
+                
+                elif tool_name == "list_subscriptions":
+                    try:
+                        url = f"{QINGLONG_URL}/open/subscriptions"
+                        headers = {"Authorization": f"Bearer {token}"}
+                        resp = requests.get(url, headers=headers, timeout=10)
+                        result = resp.json()
+                    except Exception as e:
+                        response = {
+                            "jsonrpc": "2.0",
+                            "id": request["id"],
+                            "error": {"code": -32603, "message": f"请求失败: {str(e)}"}
+                        }
+                        print(json.dumps(response), flush=True)
+                        continue
+                    
+                    if result.get("code") == 200:
+                        subscriptions = result["data"] if isinstance(result["data"], list) else []
+                        subscriptions.sort(key=lambda x: x.get('id', 0))
+                        total = len(subscriptions)
+                        
+                        output = f"青龙面板: {QINGLONG_URL}\n共 {total} 个订阅:\n\n"
+                        for sub in subscriptions:
+                            output += f"ID: {sub.get('id')}\n"
+                            output += f"名称: {sub.get('name')}\n"
+                            output += f"URL: {sub.get('url')}\n"
+                            output += f"类型: {sub.get('type')}\n"
+                            output += f"定时: {sub.get('schedule')}\n"
+                            output += f"状态: {'启用' if sub.get('is_disabled') == 0 else '禁用'}\n"
+                            output += "-" * 50 + "\n"
+                        
+                        response = {
+                            "jsonrpc": "2.0",
+                            "id": request["id"],
+                            "result": {"content": [{"type": "text", "text": output}]}
+                        }
+                    else:
+                        response = {
+                            "jsonrpc": "2.0",
+                            "id": request["id"],
+                            "error": {"code": -32603, "message": f"获取订阅列表失败: {result}"}
+                        }
+                
+                elif tool_name == "run_subscription":
+                    subscription_id = arguments.get("subscription_id")
+                    try:
+                        url = f"{QINGLONG_URL}/open/subscriptions/run"
+                        headers = {"Authorization": f"Bearer {token}"}
+                        data = [subscription_id]
+                        
+                        resp = requests.put(url, headers=headers, json=data, timeout=10)
+                        result = resp.json()
+                    except Exception as e:
+                        response = {
+                            "jsonrpc": "2.0",
+                            "id": request["id"],
+                            "error": {"code": -32603, "message": f"请求失败: {str(e)}"}
+                        }
+                        print(json.dumps(response), flush=True)
+                        continue
+                    
+                    if result.get("code") == 200:
+                        response = {
+                            "jsonrpc": "2.0",
+                            "id": request["id"],
+                            "result": {"content": [{"type": "text", "text": f"订阅 {subscription_id} 已成功运行"}]}
+                        }
+                    else:
+                        response = {
+                            "jsonrpc": "2.0",
+                            "id": request["id"],
+                            "error": {"code": -32603, "message": f"运行订阅失败: {result}"}
+                        }
+                
                 else:
                     response = {
                         "jsonrpc": "2.0",

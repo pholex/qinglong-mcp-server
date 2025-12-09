@@ -1,6 +1,6 @@
 [project]
 name = "qinglong-mcp-server"
-version = "0.1.4"
+version = "0.1.5"
 description = "MCP server for Qinglong Panel task management"
 readme = "README.md"
 requires-python = ">=3.8"

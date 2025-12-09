@@ -13,6 +13,8 @@
 - `run_task_async`: 异步启动任务，不等待执行完成
 - `get_task_logs`: 获取青龙面板中指定任务的执行日志
 - `get_task_status`: 获取青龙面板中指定任务的执行状态
+- `list_subscriptions`: 查询青龙面板中的所有订阅列表
+- `run_subscription`: 运行指定的订阅
 
 ## 安装
 
